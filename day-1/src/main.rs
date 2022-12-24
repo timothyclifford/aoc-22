@@ -4,7 +4,7 @@ use std::io::{self, BufRead};
 fn main() {
     const FILENAME: &str = "src/input.txt";
 
-    let lines = read_input(FILENAME.to_owned());
+    let lines = read_input(FILENAME);
     let elf_calories = get_elf_calories(lines);
 
     // let elf_with_most_calories = find_elf_with_most_calories(elf_calories);
@@ -14,7 +14,7 @@ fn main() {
     println!("Calories: {}", elves_most_calories.iter().sum::<i32>());
 }
 
-fn read_input(filename: String) -> Vec<String> {
+fn read_input(filename: &str) -> Vec<String> {
     let mut elves = Vec::new();
 
     if let Ok(lines) = read_lines(filename) {
@@ -28,7 +28,7 @@ fn read_input(filename: String) -> Vec<String> {
     elves
 }
 
-fn read_lines(filename: String) -> io::Result<io::Lines<io::BufReader<File>>> {
+fn read_lines(filename: &str) -> io::Result<io::Lines<io::BufReader<File>>> {
     let file = File::open(filename)?;
     Ok(io::BufReader::new(file).lines())
 }
@@ -50,7 +50,7 @@ fn get_elf_calories(elves: Vec<String>) -> Vec<Vec<i32>> {
 
     all_elves.push(current_elf);
 
-    return all_elves;
+    all_elves
 }
 
 fn find_elf_with_most_calories(elves: Vec<Vec<i32>>) -> i32 {
@@ -86,7 +86,7 @@ mod tests {
 
     #[test]
     fn test_read_input() {
-        let input = FILENAME_TEST.to_owned();
+        let input = FILENAME_TEST;
         let expected = vec![
             String::from("123"),
             String::from(""),
@@ -138,7 +138,3 @@ mod tests {
         assert_eq!(result, expected);
     }
 }
-
-// get list of elves
-// split list into individual elves
-// calculate elft inventory
