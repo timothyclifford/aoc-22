@@ -18,14 +18,14 @@ fn read_input(filename: String) -> Vec<String> {
     let mut elves = Vec::new();
 
     if let Ok(lines) = read_lines(filename) {
-        for line in lines {
+        lines.for_each(|line| {
             if let Ok(value) = line {
                 elves.push(value)
             }
-        }
+        });
     }
 
-    return elves;
+    elves
 }
 
 fn read_lines(filename: String) -> io::Result<io::Lines<io::BufReader<File>>> {
@@ -38,15 +38,13 @@ fn get_elf_calories(elves: Vec<String>) -> Vec<Vec<i32>> {
     let mut all_elves = Vec::new();
 
     for elf in elves.iter() {
-        if elf.trim().len() == 0 {
+        if elf.trim().is_empty() {
             all_elves.push(current_elf);
             current_elf = Vec::new();
+        } else if let Ok(calories) = elf.parse::<i32>() {
+            current_elf.push(calories);
         } else {
-            if let Ok(calories) = elf.parse::<i32>() {
-                current_elf.push(calories);
-            } else {
-                println!("Failed to parse calories value {}", elf)
-            }
+            println!("Failed to parse calories value {}", elf)
         }
     }
 
@@ -65,7 +63,7 @@ fn find_elf_with_most_calories(elves: Vec<Vec<i32>>) -> i32 {
         }
     }
 
-    return most;
+    most
 }
 
 fn find_3_elves_with_most_calories(elves: Vec<Vec<i32>>) -> Vec<i32> {
