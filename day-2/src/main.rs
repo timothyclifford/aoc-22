@@ -3,19 +3,28 @@ use std::{
     io::{self, BufRead},
 };
 
+const FILENAME: &str = "src/input.txt";
+
 const ROCK: i32 = 1;
 const PAPER: i32 = 2;
 const SCISSORS: i32 = 3;
 
-enum Play {
+const LOSE: i32 = 0;
+const DRAW: i32 = 3;
+const WIN: i32 = 6;
+
+enum TheirPlay {
     Rock,
     Paper,
     Scissors,
 }
+enum MyPlay {
+    Lose,
+    Draw,
+    Win,
+}
 
 fn main() {
-    const FILENAME: &str = "src/input.txt";
-
     let lines = read_input(FILENAME);
 
     let plays = lines.into_iter().filter_map(|x| parse_plays(&x));
@@ -27,10 +36,10 @@ fn main() {
     println!("Total score: {}", total_score);
 }
 
-fn parse_plays(input: &str) -> Option<(Play, Play)> {
+fn parse_plays(input: &str) -> Option<(TheirPlay, MyPlay)> {
     let mut plays = input.split_whitespace();
-    let their_play = parse_play(plays.next());
-    let my_play = parse_play(plays.next());
+    let their_play = parse_their_play(plays.next());
+    let my_play = parse_my_play(plays.next());
 
     match (their_play, my_play) {
         (Some(t), Some(m)) => Some((t, m)),
@@ -38,41 +47,53 @@ fn parse_plays(input: &str) -> Option<(Play, Play)> {
     }
 }
 
-fn parse_play(input: Option<&str>) -> Option<Play> {
+fn parse_their_play(input: Option<&str>) -> Option<TheirPlay> {
     match input {
         Some(i) => match i {
-            "A" | "X" => Some(Play::Rock),
-            "B" | "Y" => Some(Play::Paper),
-            "C" | "Z" => Some(Play::Scissors),
+            "A" => Some(TheirPlay::Rock),
+            "B" => Some(TheirPlay::Paper),
+            "C" => Some(TheirPlay::Scissors),
             _ => None,
         },
         _ => None,
     }
 }
 
-fn parse_scores(input: (Play, Play)) -> i32 {
+fn parse_my_play(input: Option<&str>) -> Option<MyPlay> {
+    match input {
+        Some(i) => match i {
+            "X" => Some(MyPlay::Lose),
+            "Y" => Some(MyPlay::Draw),
+            "Z" => Some(MyPlay::Win),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+fn parse_scores(input: (TheirPlay, MyPlay)) -> i32 {
     let base_score = match input.1 {
-        Play::Rock => ROCK,
-        Play::Paper => PAPER,
-        Play::Scissors => SCISSORS,
+        MyPlay::Lose => LOSE,
+        MyPlay::Draw => DRAW,
+        MyPlay::Win => WIN,
     };
     let result_score = match input.0 {
-        Play::Rock => match input.1 {
-            Play::Rock => 3,
-            Play::Paper => 6,
-            Play::Scissors => 0,
+        TheirPlay::Rock => match input.1 {
+            MyPlay::Lose => SCISSORS,
+            MyPlay::Draw => ROCK,
+            MyPlay::Win => PAPER,
             _ => 0,
         },
-        Play::Paper => match input.1 {
-            Play::Rock => 0,
-            Play::Paper => 3,
-            Play::Scissors => 6,
+        TheirPlay::Paper => match input.1 {
+            MyPlay::Lose => ROCK,
+            MyPlay::Draw => PAPER,
+            MyPlay::Win => SCISSORS,
             _ => 0,
         },
-        Play::Scissors => match input.1 {
-            Play::Rock => 6,
-            Play::Paper => 0,
-            Play::Scissors => 3,
+        TheirPlay::Scissors => match input.1 {
+            MyPlay::Lose => PAPER,
+            MyPlay::Draw => SCISSORS,
+            MyPlay::Win => ROCK,
             _ => 0,
         },
     };
@@ -81,17 +102,17 @@ fn parse_scores(input: (Play, Play)) -> i32 {
 }
 
 fn read_input(filename: &str) -> Vec<String> {
-    let mut lines = Vec::new();
+    let mut input_lines = Vec::new();
 
-    if let Ok(linez) = read_lines(filename) {
-        linez.for_each(|line| {
+    if let Ok(lines) = read_lines(filename) {
+        lines.for_each(|line| {
             if let Ok(value) = line {
-                lines.push(value)
+                input_lines.push(value)
             }
         });
     }
 
-    lines
+    input_lines
 }
 
 fn read_lines(filename: &str) -> io::Result<io::Lines<io::BufReader<File>>> {
@@ -104,12 +125,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_play() {
+    fn test_parse_their_play() {
         let input = Some("A");
 
-        let result = parse_play(input);
+        let result = parse_their_play(input);
 
-        matches!(result.unwrap(), Play::Rock);
+        matches!(result.unwrap(), TheirPlay::Rock);
+    }
+
+    #[test]
+    fn test_parse_my_play() {
+        let input = Some("X");
+
+        let result = parse_my_play(input);
+
+        matches!(result.unwrap(), MyPlay::Lose);
     }
 
     #[test]
@@ -119,14 +149,14 @@ mod tests {
         let result = parse_plays(input);
 
         if let Some(r) = result {
-            matches!(r.0, Play::Scissors);
-            matches!(r.1, Play::Rock);
+            matches!(r.0, TheirPlay::Scissors);
+            matches!(r.1, MyPlay::Lose);
         }
     }
 
     #[test]
     fn test_parse_scores_winning() {
-        let input = (Play::Scissors, Play::Rock);
+        let input = (TheirPlay::Scissors, MyPlay::Win);
 
         let result = parse_scores(input);
 
@@ -135,7 +165,7 @@ mod tests {
 
     #[test]
     fn test_parse_scores_losing() {
-        let input = (Play::Rock, Play::Scissors);
+        let input = (TheirPlay::Rock, MyPlay::Lose);
 
         let result = parse_scores(input);
 
@@ -144,7 +174,7 @@ mod tests {
 
     #[test]
     fn test_parse_scores_drawing() {
-        let input = (Play::Paper, Play::Paper);
+        let input = (TheirPlay::Paper, MyPlay::Draw);
 
         let result = parse_scores(input);
 
