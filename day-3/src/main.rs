@@ -1,9 +1,8 @@
+use std::collections::HashMap;
 use std::{
     fs::File,
     io::{self, BufRead},
 };
-
-type Point = (i32, char);
 
 const FILENAME: &str = "src/input.txt";
 
@@ -14,16 +13,16 @@ fn main() {
 
     let compartments = lines.iter().map(|l| get_compartments(l));
 
-    let shared_items = compartments.map(|(c1, c2)| todo!());
-    // read lines
-    // iterate through
-    // get compartment contents
-    // find shared items
-    // sum shared item priorities
-    // println!("{}", alphabet);
+    let shared_items = compartments
+        .flat_map(|(c1, c2)| find_shared_items(c1, c2))
+        .collect();
+
+    let answer = sum_shared_item_priorities(priorities, shared_items);
+
+    println!("ANSWER: {}", answer);
 }
 
-fn init_priorities() -> std::vec::Vec<Point> {
+fn init_priorities() -> HashMap<char, i32> {
     let alphabet = (b'a'..=b'z')
         .chain(b'A'..=b'Z')
         .map(|c| c as char)
@@ -31,7 +30,7 @@ fn init_priorities() -> std::vec::Vec<Point> {
 
     alphabet
         .enumerate()
-        .map(|(i, x)| -> Point { (i as i32 + 1, x) })
+        .map(|(i, x)| (x, i as i32 + 1))
         .collect()
 }
 
@@ -40,9 +39,30 @@ fn get_compartments(contents: &str) -> (Vec<char>, Vec<char>) {
     let compartments = contents.split_at(contents_size / 2);
 
     (
-        compartments.0.chars().collect::<Vec<_>>(),
-        compartments.1.chars().collect::<Vec<_>>(),
+        compartments.0.chars().collect(),
+        compartments.1.chars().collect(),
     )
+}
+
+fn find_shared_items(compartment_one: Vec<char>, compartment_two: Vec<char>) -> Vec<char> {
+    let mut shared_items = Vec::new();
+
+    for compartment in compartment_one {
+        if let Some(found) = compartment_two.iter().find(|&&x| x == compartment) {
+            if !shared_items.contains(found) {
+                shared_items.push(*found);
+            }
+        }
+    }
+
+    shared_items
+}
+
+fn sum_shared_item_priorities(priorities: HashMap<char, i32>, shared_items: Vec<char>) -> i32 {
+    shared_items
+        .iter()
+        .flat_map(|item| priorities.get(item))
+        .sum()
 }
 
 fn read_input(filename: &str) -> Vec<String> {
@@ -72,14 +92,7 @@ mod tests {
     fn test_init_priorities() {
         let result = init_priorities();
 
-        assert_eq!(result.first().unwrap().0, 1);
-        assert_eq!(result.first().unwrap().1, 'a');
-        assert_eq!(result.get(25).unwrap().0, 26);
-        assert_eq!(result.get(25).unwrap().1, 'z');
-        assert_eq!(result.get(26).unwrap().0, 27);
-        assert_eq!(result.get(26).unwrap().1, 'A');
-        assert_eq!(result.last().unwrap().0, 52);
-        assert_eq!(result.last().unwrap().1, 'Z');
+        assert_eq!(result.get(&'a').unwrap().to_owned(), 1_i32);
     }
 
     #[test]
@@ -88,5 +101,25 @@ mod tests {
 
         assert_eq!(result.0, "vJrwpWtwJgWr".chars().collect::<Vec<_>>());
         assert_eq!(result.1, "hcsFMMfFFhFp".chars().collect::<Vec<_>>());
+    }
+
+    #[test]
+    fn test_find_shared_items() {
+        let result = find_shared_items(
+            "vJrwpWtwJgWr".chars().collect(),
+            "hcsFMMfFFhFp".chars().collect(),
+        );
+
+        assert_eq!(result, vec!['p']);
+    }
+
+    #[test]
+    fn test_sum_shared_item_priorities() {
+        let priorities = init_priorities();
+        let shared_items = vec!['a', 'A', 'z', 'Z'];
+
+        let result = sum_shared_item_priorities(priorities, shared_items);
+
+        assert_eq!(result, 1 + 26 + 27 + 52);
     }
 }
