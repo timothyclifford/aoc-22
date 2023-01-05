@@ -33,8 +33,8 @@ fn main() {
 
     let pairs: Vec<(String, String)> = lines
         .into_iter()
-        .map(|x| {
-            let ranges = x.split(',').collect::<Vec<_>>();
+        .map(|line| {
+            let ranges = line.split(',').collect::<Vec<_>>();
             (
                 ranges.first().unwrap().to_string(),
                 ranges.last().unwrap().to_string(),
@@ -44,13 +44,13 @@ fn main() {
 
     let pairs_with_ranges: Vec<(Vec<i32>, Vec<i32>)> = pairs
         .into_iter()
-        .map(|x| (expand_ranges(x.0), expand_ranges(x.1)))
+        .map(|pair| (expand_ranges(pair.0), expand_ranges(pair.1)))
         .collect();
 
     let assignments = Assignments::new(
         pairs_with_ranges
             .into_iter()
-            .map(|x| Pair::new(x.0, x.1))
+            .map(|pair| Pair::new(pair.0, pair.1))
             .collect(),
     );
 
