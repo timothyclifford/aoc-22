@@ -22,6 +22,11 @@ impl Pair {
         Self { left, right }
     }
 
+    fn any_match(&self) -> bool {
+        self.left.iter().any(|xx| self.right.contains(xx))
+            || self.right.iter().any(|xx| self.left.contains(xx))
+    }
+
     fn is_covered(&self) -> bool {
         self.left.iter().all(|xx| self.right.contains(xx))
             || self.right.iter().all(|xx| self.left.contains(xx))
@@ -58,7 +63,7 @@ fn main() {
         .pairs
         .iter()
         .map(|pair| {
-            return if pair.is_covered() { 1 } else { 0 };
+            return if pair.any_match() { 1 } else { 0 };
         })
         .collect::<Vec<i32>>()
         .iter()
@@ -110,6 +115,24 @@ mod tests {
         let pair = Pair::new(vec![1, 2, 3, 4, 42], vec![2, 3, 4, 21]);
 
         let result = pair.is_covered();
+
+        assert_eq!(result, false);
+    }
+
+    #[test]
+    fn test_any_match_true() {
+        let pair = Pair::new(vec![1, 2, 3, 4], vec![2, 3, 4, 5]);
+
+        let result = pair.any_match();
+
+        assert_eq!(result, true);
+    }
+
+    #[test]
+    fn test_any_match_false() {
+        let pair = Pair::new(vec![1, 2, 3, 4], vec![5, 6, 7]);
+
+        let result = pair.any_match();
 
         assert_eq!(result, false);
     }
